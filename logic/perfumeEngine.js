@@ -1,157 +1,257 @@
-// Mapeos de respuestas a pesos por familia olfativa
-const personalityWeights = {
-    aventurero: { amaderado:2, cítrico:1, especiado:2, marino:2, verde:1 },
-    romantico: { floral:3, dulce:2, almizclado:1, frutal:1 },
-    elegante: { floral:2, amaderado:1, almizclado:2, cítrico:1 },
-    natural: { verde:3, fresco:2, cítrico:1, amaderado:1 },
-    misterioso: { oriental:2, especiado:2, amaderado:1, resinoso:2 },
-    alegre: { frutal:3, cítrico:2, floral:1, gourmand:1 },
-    sofisticado: { oriental:2, amaderado:2, floral:1, almizclado:1 }
+// Mapeo de categorías de personalidad/perfil a pesos por familia
+const categoryWeights = {
+    // MUJER
+    romantica: { floral: 3, dulce: 2, romantico: 3, suave: 2 },
+    social: { frutal: 2, cítrico: 2, alegre: 2, vibrante: 2 },
+    introspectiva: { amaderado: 1, verde: 2, fresco: 2, suave: 3 },
+    activa: { cítrico: 3, fresco: 3, frutal: 1, verde: 2 },
+    intensa: { oriental: 3, especiado: 2, intenso: 3, amaderado: 1 },
+    suave: { floral: 2, dulce: 2, suave: 3, cremoso: 2, almizclado: 1 },
+    fresca: { cítrico: 3, fresco: 3, frutal: 2, verde: 2 },
+    dulce: { gourmand: 3, dulce: 3, frutal: 1, cremoso: 1 },
+    // HOMBRE
+    activo: { cítrico: 2, fresco: 3, amaderado: 1, verde: 2 },
+    tranquilo: { amaderado: 2, verde: 2, suave: 2, cremoso: 1 },
+    aventurero: { amaderado: 2, especiado: 2, verde: 2, oriental: 1 },
+    clasico: { amaderado: 3, fresco: 1, clásico: 3, seco: 1 },
+    intenso: { oriental: 3, especiado: 3, amaderado: 1, intenso: 3 },
+    sofisticado: { oriental: 2, amaderado: 2, especiado: 1, cremoso: 1 },
+    fresco: { cítrico: 3, fresco: 3, acuático: 3, ligero: 2 },
+    // Categorías de dulzura / intensidad
+    muydulce: { gourmand: 3, dulce: 4 },
+    nodulce: { gourmand: -3, dulce: -3, seco: 2, amaderado: 1 },
+    moderado: {}, // neutro
+    variable: {}, // no afecta directamente a familias, lo usaremos en lógica de capas
+    // Preferencias directas de familias (pregunta 6 mujer/hombre)
+    frutal: { frutal: 3 },
+    floral: { floral: 3 },
+    dulce: { dulce: 3 },
+    citrico: { cítrico: 3 },
+    amaderado: { amaderado: 3 },
+    intenso: { oriental: 2, especiado: 2, intenso: 2 }
 };
 
-const seasonWeights = {
-    primavera: { floral:3, verde:2, cítrico:1, frutal:1 },
-    verano: { cítrico:3, frutal:2, fresco:2, marino:2 },
-    otoño: { amaderado:2, especiado:2, oriental:2, gourmand:1 },
-    invierno: { oriental:3, amaderado:2, gourmand:2, especiado:1 }
+// Mapeo de respuestas de preguntas a categorías (según tu documento)
+// Lo usaremos en el engine para interpretar las respuestas literales
+const answerToCategory = {
+    mujer: {
+        pregunta1: {
+            "Café, paseo y momentos tranquilos": "romantica",
+            "Salir y estar con amigos": "social",
+            "Casa, lectura y descanso": "introspectiva",
+            "Naturaleza o deporte": "activa"
+        },
+        pregunta2: {
+            "Soñadora y romántica": "romantica",
+            "Apasionada e intensa": "intensa",
+            "Tranquila y equilibrada": "suave",
+            "Espontánea y alegre": "fresca"
+        },
+        pregunta3: {
+            "Por mi calidez y ternura": "dulce",
+            "Por mi elegancia y estilo": "intensa",
+            "Por mi frescura y autenticidad": "fresca",
+            "Por mi paz y sensibilidad": "suave"
+        },
+        pregunta4: {
+            "Rojo o rosa": "intensa",
+            "Blanco o beige": "suave",
+            "Morado o azul": "romantica",
+            "Verde o amarillo": "fresca"
+        },
+        pregunta5: {
+            "Pop romántico o baladas": "romantica",
+            "Reggaeton o electrónica": "social",
+            "Indie o alternativa": "introspectiva",
+            "Salsa o tropical": "activa"
+        },
+        pregunta6: {
+            "Frutales y afrutados": "frutal",
+            "Florales y delicados": "floral",
+            "Dulces y cremosos": "dulce",
+            "Cítricos y frescos": "citrico"
+        },
+        pregunta7: {
+            "Me encantan, entre más dulce mejor": "muydulce",
+            "Me gustan pero con equilibrio": "dulce",
+            "Los tolero pero no son mis favoritos": "nodulce",
+            "No me gustan nada": "nodulce"
+        },
+        pregunta8: {
+            "Coco tropical": "tropical", // añadimos tropical si es necesario
+            "Fresa y frutos rojos": "frutal",
+            "Durazno y fruta suave": "suave",
+            "Rosa y floral": "floral"
+        },
+        pregunta9: {
+            "Muy suave, apenas perceptible": "suave",
+            "Moderado y equilibrado": "moderado",
+            "Intenso y hostigante": "intensa",
+            "Variable según el momento": "variable"
+        },
+        pregunta10: {
+            "Sí, prefiero siempre algo discreto": "suave",
+            "No, me gustan los que se notan": "intensa",
+            "Depende del aroma": "moderado",
+            "Solo de noche me gustan intensos": "variable"
+        }
+    },
+    hombre: {
+        pregunta1: {
+            "Deporte o actividad física": "activo",
+            "Descansar en casa": "tranquilo",
+            "Salir con amigos": "social",
+            "Explorar algo nuevo": "aventurero"
+        },
+        pregunta2: {
+            "Seguro y sereno": "clasico",
+            "Intenso y directo": "intenso",
+            "Libre y espontáneo": "fresco",
+            "Enfocado y ambicioso": "sofisticado"
+        },
+        pregunta3: {
+            "Por mi seguridad y presencia": "clasico",
+            "Por mi frescura y autenticidad": "fresco",
+            "Por mi intensidad y carácter": "intenso",
+            "Por mi estilo y sofisticación": "sofisticado"
+        },
+        pregunta4: {
+            "Negro o gris": "intenso",
+            "Azul marino o verde oscuro": "clasico",
+            "Blanco o beige": "fresco",
+            "Café o terracota": "sofisticado"
+        },
+        pregunta5: {
+            "Trap, rap o urbano": "intenso",
+            "Rock o alternativa": "clasico",
+            "Electrónica o reggaeton": "social",
+            "Jazz, soul o lo-fi": "sofisticado"
+        },
+        pregunta6: {
+            "Frescos y acuáticos": "fresco",
+            "Amaderados y naturales": "amaderado",
+            "Cítricos y energéticos": "citrico",
+            "Intensos y misteriosos": "intenso"
+        },
+        pregunta7: {
+            "No me gustan nada": "nodulce",
+            "Los tolero solo como nota de fondo": "nodulce",
+            "Me gustan con equilibrio": "dulce",
+            "Me encantan": "muydulce"
+        },
+        pregunta8: {
+            "Brisa marina y frescura": "fresco",
+            "Pino o bosque": "verde",
+            "Sándalo o madera": "amaderado",
+            "Oriental o buena noche": "intenso"
+        },
+        pregunta9: {
+            "Suave y discreto": "suave",
+            "Moderado y equilibrado": "moderado",
+            "Fuerte e impactante": "intenso",
+            "Suave de día, intenso de noche": "variable"
+        },
+        pregunta10: {
+            "Sí, prefiero siempre discreto": "suave",
+            "No, me gustan los que se notan": "intenso",
+            "Depende del aroma": "moderado",
+            "Solo de noche intensos": "variable"
+        }
+    }
 };
-
-const occasionWeights = {
-    diario: { cítrico:2, fresco:2, floral:1, verde:1 },
-    cita: { floral:2, almizclado:2, dulce:2, oriental:1 },
-    fiesta: { oriental:3, gourmand:2, especiado:2, amaderado:1 },
-    especial: { floral:2, amaderado:2, almizclado:2, oriental:2 },
-    regalo: { frutal:2, floral:2, gourmand:2, almizclado:1 }
-};
-
-// Nombres poéticos según personalidad + paisaje/estación
-const adjectiveMap = {
-    aventurero: 'Audaz',
-    romantico: 'Apasionado',
-    elegante: 'Distinguido',
-    natural: 'Puro',
-    misterioso: 'Enigmático',
-    alegre: 'Vibrante',
-    sofisticado: 'Refinado'
-};
-
-const nounMap = {
-    primavera: 'Jardín Secreto',
-    verano: 'Brisa Marina',
-    otoño: 'Bosque Dorado',
-    invierno: 'Noche de Invierno',
-    // por si el usuario elige paisaje (se puede mapear en el front)
-    bosque: 'Bosque Encantado',
-    playa: 'Playa Serena',
-    montaña: 'Cumbre Blanca',
-    ciudad: 'Luces de Ciudad'
-};
-
-function getIntensityMultiplier(intensity) {
-    // Ajusta la distribución de las capas según la intensidad deseada
-    const map = {
-        suave: { top: 0.20, heart: 0.45, base: 0.35 },
-        moderada: { top: 0.25, heart: 0.40, base: 0.35 },
-        intensa: { top: 0.20, heart: 0.35, base: 0.45 }
-    };
-    return map[intensity] || map.moderada;
-}
 
 function generatePerfume(answers, aromas) {
-    // 1. Calcular puntuación para cada aroma
+    // answers esperado: { gender: "mujer"|"hombre", q1: "respuesta", q2: ..., q10: "respuesta" }
+    const gender = answers.gender;
+    const mapping = answerToCategory[gender];
+    if (!mapping) throw new Error('Género no válido');
+
+    // 1. Obtener lista de categorías resultantes de cada pregunta
+    const categories = [];
+    for (let i = 1; i <= 10; i++) {
+        const questionKey = `pregunta${i}`;
+        const answerText = answers[`q${i}`];
+        if (answerText && mapping[questionKey] && mapping[questionKey][answerText]) {
+            categories.push(mapping[questionKey][answerText]);
+        }
+    }
+
+    // 2. Calcular peso acumulado por familia a partir de las categorías
+    const familyScores = {};
+    categories.forEach(cat => {
+        const weights = categoryWeights[cat] || {};
+        for (const [family, weight] of Object.entries(weights)) {
+            familyScores[family] = (familyScores[family] || 0) + weight;
+        }
+    });
+
+    // 3. Calcular puntuación final para cada aroma
     const scores = {};
     aromas.forEach(aroma => {
         let score = 0;
-        const families = aroma.families;
-
-        // Personalidad
-        const persWeight = personalityWeights[answers.personality] || {};
-        families.forEach(f => { score += (persWeight[f] || 0); });
-
-        // Estación
-        const seasonWeight = seasonWeights[answers.season] || {};
-        families.forEach(f => { score += (seasonWeight[f] || 0); });
-
-        // Preferencias directas de familias (valoradas 1-5)
-        if (answers.families) {
-            for (const [family, rating] of Object.entries(answers.families)) {
-                const normalized = (rating - 3) * 1.5;  // -3..+3
-                if (families.includes(family)) {
-                    score += normalized;
-                }
-            }
-        }
-
-        // Ocasión
-        const occWeight = occasionWeights[answers.occasion] || {};
-        families.forEach(f => { score += (occWeight[f] || 0); });
-
-        // Notas que no soporta (excluir totalmente)
-        if (answers.dislikes && Array.isArray(answers.dislikes) && answers.dislikes.includes(aroma.name)) {
-            score = -1000;
-        }
-
+        aroma.families.forEach(f => {
+            score += (familyScores[f] || 0);
+        });
+        // Penalización si hay aversión explícita (podríamos añadir pregunta futura)
         scores[aroma.name] = score;
     });
 
-    // 2. Separar por capas y ordenar por puntuación descendente
+    // 4. Separar por capas y ordenar
     const layers = { top: [], heart: [], base: [] };
     aromas.forEach(aroma => {
-        if (scores[aroma.name] > -500) { // filtro de aversión
-            layers[aroma.layer].push({ ...aroma, score: scores[aroma.name] });
-        }
+        layers[aroma.layer].push({ ...aroma, score: scores[aroma.name] });
     });
-
     for (const layer in layers) {
         layers[layer].sort((a, b) => b.score - a.score);
     }
 
-    // 3. Seleccionar las mejores notas de cada capa
-    const maxNotes = { top: 3, heart: 4, base: 3 };
+    // 5. Seleccionar las mejores notas (limitado a 6 notas por género, pero usaremos pocas)
+    // Para mujer: 6 aromas, para hombre: 6 aromas. Podemos seleccionar todas si son positivas.
+    // Pero para mantener la pirámide, elegimos al menos 1-2 por capa disponibles.
     const selected = { top: [], heart: [], base: [] };
-    for (const layer in maxNotes) {
-        const n = Math.min(maxNotes[layer], layers[layer].length);
-        selected[layer] = layers[layer].slice(0, n);
-        // Si no hay suficientes, tomamos todas las disponibles
+    for (const layer in layers) {
+        if (layers[layer].length > 0) {
+            // Tomamos todas las notas de esa capa que tengan score > 0, o al menos la mejor
+            const candidates = layers[layer].filter(a => a.score > 0);
+            if (candidates.length === 0) candidates.push(layers[layer][0]); // al menos una
+            selected[layer] = candidates;
+        }
     }
 
-    // 4. Calcular proporciones dentro de cada capa
-    const intensityTarget = getIntensityMultiplier(answers.intensity || 'moderada');
+    // 6. Calcular proporciones dentro de cada capa según intensidad preferida
+    // Primero determinamos intensidad general desde las respuestas de intensidad (q9,q10)
+    let intensityPreference = 'moderado';
+    const q9Cat = categories.find(c => ['suave','moderado','intensa','intenso','variable'].includes(c));
+    if (q9Cat === 'suave' || q9Cat === 'suave') intensityPreference = 'suave';
+    else if (q9Cat === 'intensa' || q9Cat === 'intenso') intensityPreference = 'intenso';
+    else if (q9Cat === 'moderado') intensityPreference = 'moderado';
+
+    const layerDistribution = {
+        suave: { top: 0.15, heart: 0.45, base: 0.40 },
+        moderado: { top: 0.25, heart: 0.40, base: 0.35 },
+        intenso: { top: 0.20, heart: 0.35, base: 0.45 }
+    }[intensityPreference] || { top: 0.25, heart: 0.40, base: 0.35 };
 
     const formulaNotes = {};
     for (const layer in selected) {
         const notes = selected[layer];
         if (notes.length === 0) continue;
-
-        // Suma de puntuaciones positivas (shift para evitar ceros)
-        const minScore = Math.min(...notes.map(n => n.score));
-        const shift = Math.abs(minScore) + 1;
-        const adjustedScores = notes.map(n => n.score + shift);
-        const totalAdj = adjustedScores.reduce((s, v) => s + v, 0);
-
-        const layerTotal = intensityTarget[layer] * 100;
-        formulaNotes[layer] = notes.map((note, idx) => ({
+        const totalScore = notes.reduce((sum, n) => sum + n.score, 0);
+        const layerTotal = layerDistribution[layer] * 100;
+        formulaNotes[layer] = notes.map(note => ({
             name: note.name,
-            percentage: parseFloat(((adjustedScores[idx] / totalAdj) * layerTotal).toFixed(1))
+            percentage: parseFloat(((note.score / totalScore) * layerTotal).toFixed(1))
         }));
     }
 
-    // 5. Generar nombre
-    const adj = adjectiveMap[answers.personality] || 'Único';
-    const noun = nounMap[answers.season] || 'Esencia';
-    const perfumeName = `${adj} ${noun}`;
+    // 7. Generar nombre y descripción
+    const mainCategory = categories[0] || 'personalizado';
+    const perfumeName = `Esencias ${gender === 'mujer' ? 'Femeninas' : 'Masculinas'}: ${mainCategory}`;
+    const desc = `Una combinación única que refleja tu estilo ${mainCategory}. Notas: ${
+        Object.values(formulaNotes).flat().map(n => n.name).join(', ')
+    }.`;
 
-    // 6. Descripción
-    const topNames = formulaNotes.top ? formulaNotes.top.map(n => n.name).join(', ') : 'notas frescas';
-    const heartNames = formulaNotes.heart ? formulaNotes.heart.map(n => n.name).join(', ') : 'florales';
-    const baseNames = formulaNotes.base ? formulaNotes.base.map(n => n.name).join(', ') : 'cálidas';
-    const desc = `Un perfume ${answers.intensity || 'moderado'} que abre con ${topNames}, despliega un corazón de ${heartNames} y reposa sobre una base de ${baseNames}. Creado para una personalidad ${answers.personality}, perfecto para la ocasión: ${answers.occasion}.`;
-
-    return {
-        name: perfumeName,
-        description: desc,
-        notes: formulaNotes
-    };
+    return { name: perfumeName, description: desc, notes: formulaNotes };
 }
 
 module.exports = { generatePerfume };
