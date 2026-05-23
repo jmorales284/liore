@@ -1,4 +1,4 @@
-// Mapeo de categorías de personalidad/perfil a pesos por familia
+// Mapeo de categorías a pesos por familia (sin cambios)
 const categoryWeights = {
     // MUJER
     romantica: { floral: 3, dulce: 2, romantico: 3, suave: 2 },
@@ -17,12 +17,12 @@ const categoryWeights = {
     intenso: { oriental: 3, especiado: 3, amaderado: 1, intenso: 3 },
     sofisticado: { oriental: 2, amaderado: 2, especiado: 1, cremoso: 1 },
     fresco: { cítrico: 3, fresco: 3, acuático: 3, ligero: 2 },
-    // Categorías de dulzura / intensidad
+    // Dulzura
     muydulce: { gourmand: 3, dulce: 4 },
     nodulce: { gourmand: -3, dulce: -3, seco: 2, amaderado: 1 },
-    moderado: {}, // neutro
-    variable: {}, // no afecta directamente a familias, lo usaremos en lógica de capas
-    // Preferencias directas de familias (pregunta 6 mujer/hombre)
+    moderado: {},
+    variable: {},
+    // Preferencias directas (pregunta 6)
     frutal: { frutal: 3 },
     floral: { floral: 3 },
     dulce: { dulce: 3 },
@@ -31,8 +31,7 @@ const categoryWeights = {
     intenso: { oriental: 2, especiado: 2, intenso: 2 }
 };
 
-// Mapeo de respuestas de preguntas a categorías (según tu documento)
-// Lo usaremos en el engine para interpretar las respuestas literales
+// Traducción respuestas -> categorías (sin cambios, pero la incluimos completa)
 const answerToCategory = {
     mujer: {
         pregunta1: {
@@ -78,7 +77,7 @@ const answerToCategory = {
             "No me gustan nada": "nodulce"
         },
         pregunta8: {
-            "Coco tropical": "tropical", // añadimos tropical si es necesario
+            "Coco tropical": "tropical",
             "Fresa y frutos rojos": "frutal",
             "Durazno y fruta suave": "suave",
             "Rosa y floral": "floral"
@@ -161,22 +160,20 @@ const answerToCategory = {
 };
 
 function generatePerfume(answers, aromas) {
-    // answers esperado: { gender: "mujer"|"hombre", q1: "respuesta", q2: ..., q10: "respuesta" }
     const gender = answers.gender;
     const mapping = answerToCategory[gender];
     if (!mapping) throw new Error('Género no válido');
 
-    // 1. Obtener lista de categorías resultantes de cada pregunta
+    // 1. Obtener categorías de cada respuesta
     const categories = [];
     for (let i = 1; i <= 10; i++) {
-        const questionKey = `pregunta${i}`;
         const answerText = answers[`q${i}`];
-        if (answerText && mapping[questionKey] && mapping[questionKey][answerText]) {
-            categories.push(mapping[questionKey][answerText]);
+        if (answerText && mapping[`pregunta${i}`] && mapping[`pregunta${i}`][answerText]) {
+            categories.push(mapping[`pregunta${i}`][answerText]);
         }
     }
 
-    // 2. Calcular peso acumulado por familia a partir de las categorías
+    // 2. Puntuar familias
     const familyScores = {};
     categories.forEach(cat => {
         const weights = categoryWeights[cat] || {};
@@ -185,73 +182,71 @@ function generatePerfume(answers, aromas) {
         }
     });
 
-    // 3. Calcular puntuación final para cada aroma
-    const scores = {};
-    aromas.forEach(aroma => {
+    // 3. Filtrar aromas del género y calcular puntuación
+    const genderAromas = aromas.filter(a => a.gender === gender);
+    const scored = genderAromas.map(aroma => {
         let score = 0;
         aroma.families.forEach(f => {
             score += (familyScores[f] || 0);
         });
-        // Penalización si hay aversión explícita (podríamos añadir pregunta futura)
-        scores[aroma.name] = score;
+        return { ...aroma, score };
     });
 
-    // 4. Separar por capas y ordenar
-    const layers = { top: [], heart: [], base: [] };
-    aromas.forEach(aroma => {
-        layers[aroma.layer].push({ ...aroma, score: scores[aroma.name] });
-    });
-    for (const layer in layers) {
-        layers[layer].sort((a, b) => b.score - a.score);
+    // 4. Ordenar por puntuación descendente
+    scored.sort((a, b) => b.score - a.score);
+
+    // 5. Seleccionar máximo 5 aromas, dando prioridad a los de score positivo
+    const MAX_NOTES = 5;
+    const positive = scored.filter(a => a.score > 0);
+    let selected;
+    if (positive.length >= MAX_NOTES) {
+        selected = positive.slice(0, MAX_NOTES);
+    } else {
+        // Tomamos todos los positivos y completamos con los mejores (incluso negativos) hasta MAX_NOTES
+        const remaining = scored.filter(a => a.score <= 0);
+        selected = positive.concat(remaining).slice(0, MAX_NOTES);
     }
 
-    // 5. Seleccionar las mejores notas (limitado a 6 notas por género, pero usaremos pocas)
-    // Para mujer: 6 aromas, para hombre: 6 aromas. Podemos seleccionar todas si son positivas.
-    // Pero para mantener la pirámide, elegimos al menos 1-2 por capa disponibles.
-    const selected = { top: [], heart: [], base: [] };
-    for (const layer in layers) {
-        if (layers[layer].length > 0) {
-            // Tomamos todas las notas de esa capa que tengan score > 0, o al menos la mejor
-            const candidates = layers[layer].filter(a => a.score > 0);
-            if (candidates.length === 0) candidates.push(layers[layer][0]); // al menos una
-            selected[layer] = candidates;
+    // 6. Determinar intensidad a partir de categorías de q9/q10
+    let intensityLevel = 'moderado';
+    const intensityCat = categories.find(c => ['suave','moderado','intensa','intenso'].includes(c));
+    if (intensityCat === 'suave') intensityLevel = 'suave';
+    else if (intensityCat === 'intensa' || intensityCat === 'intenso') intensityLevel = 'intenso';
+    else if (intensityCat === 'moderado') intensityLevel = 'moderado';
+
+    const totalDrops = { suave: 80, moderado: 120, intenso: 160 }[intensityLevel] || 120;
+
+    // 7. Asignar gotas proporcionalmente al score (mínimo 1 gota)
+    const minScore = Math.min(...selected.map(a => a.score));
+    const shift = Math.abs(minScore) + 1;
+    const adjusted = selected.map(a => ({ ...a, adjScore: a.score + shift }));
+    const totalAdj = adjusted.reduce((sum, a) => sum + a.adjScore, 0);
+
+    let drops = adjusted.map(a => Math.floor((a.adjScore / totalAdj) * totalDrops));
+    // Ajustar para que sumen totalDrops
+    let diff = totalDrops - drops.reduce((s, d) => s + d, 0);
+    // Repartir las gotas sobrantes entre las notas con mayor score ajustado
+    for (let i = 0; i < diff; i++) {
+        // Índice con mayor adjScore (y que no tenga 0? cualquiera)
+        let maxIdx = 0;
+        for (let j = 1; j < adjusted.length; j++) {
+            if (adjusted[j].adjScore > adjusted[maxIdx].adjScore) maxIdx = j;
         }
+        drops[maxIdx]++;
     }
 
-    // 6. Calcular proporciones dentro de cada capa según intensidad preferida
-    // Primero determinamos intensidad general desde las respuestas de intensidad (q9,q10)
-    let intensityPreference = 'moderado';
-    const q9Cat = categories.find(c => ['suave','moderado','intensa','intenso','variable'].includes(c));
-    if (q9Cat === 'suave' || q9Cat === 'suave') intensityPreference = 'suave';
-    else if (q9Cat === 'intensa' || q9Cat === 'intenso') intensityPreference = 'intenso';
-    else if (q9Cat === 'moderado') intensityPreference = 'moderado';
+    const resultNotes = selected.map((a, idx) => ({
+        name: a.name,
+        drops: drops[idx]
+    }));
 
-    const layerDistribution = {
-        suave: { top: 0.15, heart: 0.45, base: 0.40 },
-        moderado: { top: 0.25, heart: 0.40, base: 0.35 },
-        intenso: { top: 0.20, heart: 0.35, base: 0.45 }
-    }[intensityPreference] || { top: 0.25, heart: 0.40, base: 0.35 };
-
-    const formulaNotes = {};
-    for (const layer in selected) {
-        const notes = selected[layer];
-        if (notes.length === 0) continue;
-        const totalScore = notes.reduce((sum, n) => sum + n.score, 0);
-        const layerTotal = layerDistribution[layer] * 100;
-        formulaNotes[layer] = notes.map(note => ({
-            name: note.name,
-            percentage: parseFloat(((note.score / totalScore) * layerTotal).toFixed(1))
-        }));
-    }
-
-    // 7. Generar nombre y descripción
+    // 8. Nombre y descripción
     const mainCategory = categories[0] || 'personalizado';
     const perfumeName = `Esencias ${gender === 'mujer' ? 'Femeninas' : 'Masculinas'}: ${mainCategory}`;
-    const desc = `Una combinación única que refleja tu estilo ${mainCategory}. Notas: ${
-        Object.values(formulaNotes).flat().map(n => n.name).join(', ')
-    }.`;
+    const notesList = resultNotes.map(n => `${n.name} (${n.drops} gotas)`).join(', ');
+    const desc = `Fórmula para ambientador con un total de ${totalDrops} gotas. Intensidad ${intensityLevel}. Notas: ${notesList}.`;
 
-    return { name: perfumeName, description: desc, notes: formulaNotes };
+    return { name: perfumeName, description: desc, notes: resultNotes };
 }
 
 module.exports = { generatePerfume };

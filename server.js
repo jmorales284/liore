@@ -10,8 +10,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.post('/api/create-perfume', (req, res) => {
     try {
         const answers = req.body;
-        if (!answers || Object.keys(answers).length === 0) {
-            return res.status(400).json({ error: 'No se recibieron respuestas' });
+        if (!answers || !answers.gender) {
+            return res.status(400).json({ error: 'Falta el género' });
         }
         const formula = generatePerfume(answers, aromas);
         res.json(formula);

@@ -110,16 +110,17 @@ async function sendAnswers() {
         const resDiv = document.getElementById('result-container');
         resDiv.style.display = 'block';
         resDiv.innerHTML = `
-            <h2>✨ Tu perfume personalizado</h2>
+            <h2>✨ Tu ambientador personalizado</h2>
             <div class="perfume-card">
                 <h3>${formula.name}</h3>
                 <p>${formula.description}</p>
                 <div class="notes-breakdown">
-                    ${formula.notes.top ? `<div class="layer"><strong>Salida:</strong> ${formula.notes.top.map(n=>n.name+' ('+n.percentage+'%)').join(', ')}</div>` : ''}
-                    ${formula.notes.heart ? `<div class="layer"><strong>Corazón:</strong> ${formula.notes.heart.map(n=>n.name+' ('+n.percentage+'%)').join(', ')}</div>` : ''}
-                    ${formula.notes.base ? `<div class="layer"><strong>Fondo:</strong> ${formula.notes.base.map(n=>n.name+' ('+n.percentage+'%)').join(', ')}</div>` : ''}
+                    <strong>Fórmula (gotas):</strong>
+                    <ul style="list-style:none; padding:0;">
+                        ${formula.notes.map(n => `<li>🌸 ${n.name}: <b>${n.drops} gotas</b></li>`).join('')}
+                    </ul>
                 </div>
-                <button id="restart-btn">↩ Crear otro perfume</button>
+                <button id="restart-btn">↩ Crear otro ambientador</button>
             </div>
         `;
         document.getElementById('restart-btn').addEventListener('click', () => {
