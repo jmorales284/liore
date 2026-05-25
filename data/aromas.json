@@ -1,14 +1,14 @@
 [
-  {"name": "Coco", "layer": "heart", "families": ["gourmand", "dulce", "tropical", "cremoso"], "intensity": 6, "gender": "mujer"},
-  {"name": "Vainilla", "layer": "base", "families": ["gourmand", "dulce", "oriental", "cálido"], "intensity": 7, "gender": "mujer"},
-  {"name": "Rosas", "layer": "heart", "families": ["floral", "romántico", "dulce", "clásico"], "intensity": 7, "gender": "mujer"},
-  {"name": "Frutos rojos", "layer": "top", "families": ["frutal", "dulce", "ácido", "vibrante"], "intensity": 8, "gender": "mujer"},
-  {"name": "Durazno", "layer": "top", "families": ["frutal", "dulce", "suave", "jugoso"], "intensity": 5, "gender": "mujer"},
-  {"name": "Chica fresa", "layer": "heart", "families": ["frutal", "dulce", "gourmand", "alegre"], "intensity": 6, "gender": "mujer"},
-  {"name": "Brisa marina", "layer": "top", "families": ["fresco", "acuático", "cítrico", "ligero"], "intensity": 4, "gender": "hombre"},
-  {"name": "Pino silvestre", "layer": "heart", "families": ["verde", "amaderado", "fresco", "natural"], "intensity": 7, "gender": "hombre"},
-  {"name": "Muak", "layer": "base", "families": ["oriental", "amaderado", "especiado", "misterioso"], "intensity": 8, "gender": "hombre"},
-  {"name": "Sándalo", "layer": "base", "families": ["amaderado", "cremoso", "oriental", "cálido"], "intensity": 7, "gender": "hombre"},
-  {"name": "Oriental", "layer": "base", "families": ["oriental", "especiado", "cálido", "intenso"], "intensity": 9, "gender": "hombre"},
-  {"name": "Buena noche", "layer": "heart", "families": ["oriental", "amaderado", "dulce", "nocturno"], "intensity": 8, "gender": "hombre"}
+  {"name": "Coco", "layer": "heart", "families": ["gourmand", "dulce", "tropical", "cremoso", "frutal", "exótico"], "intensity": 6, "gender": "mujer"},
+  {"name": "Vainilla", "layer": "base", "families": ["gourmand", "dulce", "oriental", "cálido", "cremoso", "envolvente"], "intensity": 7, "gender": "mujer"},
+  {"name": "Rosas", "layer": "heart", "families": ["floral", "romántico", "dulce", "clásico", "elegante", "femenino"], "intensity": 7, "gender": "mujer"},
+  {"name": "Frutos rojos", "layer": "top", "families": ["frutal", "dulce", "ácido", "vibrante", "alegre", "intenso"], "intensity": 8, "gender": "mujer"},
+  {"name": "Durazno", "layer": "top", "families": ["frutal", "dulce", "suave", "jugoso", "fresco", "delicado"], "intensity": 5, "gender": "mujer"},
+  {"name": "Chica fresa", "layer": "heart", "families": ["frutal", "dulce", "gourmand", "alegre", "juvenil", "fresco"], "intensity": 6, "gender": "mujer"},
+  {"name": "Brisa marina", "layer": "top", "families": ["fresco", "acuático", "cítrico", "ligero", "marino", "energético"], "intensity": 4, "gender": "hombre"},
+  {"name": "Pino silvestre", "layer": "heart", "families": ["verde", "amaderado", "fresco", "natural", "bosque", "puro"], "intensity": 7, "gender": "hombre"},
+  {"name": "Muak", "layer": "base", "families": ["oriental", "amaderado", "especiado", "misterioso", "intenso", "nocturno"], "intensity": 8, "gender": "hombre"},
+  {"name": "Sándalo", "layer": "base", "families": ["amaderado", "cremoso", "oriental", "cálido", "elegante", "sereno"], "intensity": 7, "gender": "hombre"},
+  {"name": "Oriental", "layer": "base", "families": ["oriental", "especiado", "cálido", "intenso", "exótico", "misterioso"], "intensity": 9, "gender": "hombre"},
+  {"name": "Buena noche", "layer": "heart", "families": ["oriental", "amaderado", "dulce", "nocturno", "elegante", "sofisticado"], "intensity": 8, "gender": "hombre"}
 ]
